@@ -17,5 +17,5 @@ Route::get('/', function () {
 	$objs = new objects();
 	$ob = $objs->mostRecent();
 
-    return view('welcome')->with('objects', $ob);
+    return view('index')->with('objects', $ob);
 });
