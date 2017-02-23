@@ -1,0 +1,18 @@
+
+<nav aria-label="MORE">
+	<ul class="pagination">
+		<li{{ @result.pos == 0 ? ' class="disabled"' :''}}>
+			<a href="{{ @browse_base/@PARAMS.id }}" aria-label="Previous">
+				<span aria-hidden="true">&laquo;</span>
+			</a>
+		</li>
+		<repeat group="{{ @pagination }}" value="{{ @pg }}">
+				<li{{ @pg.pos == @PARAMS.page ? ' class="active"' : '' }}><a href="{{@browse_base/@PARAMS.id/@pg.value}}">{{@pg.value}}</a></li>
+		</repeat>
+
+		<li{{ @result.pos == (@result.count - 1) ? ' class="disabled"' :''}}>
+			<a href="{{ @browse_base/@PARAMS.id/@pages.count }}" aria-label="Next">&raquo;</a>
+		</li>
+	</ul>
+</nav>
+		

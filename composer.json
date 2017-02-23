@@ -1,0 +1,6 @@
+{
+    "require": {
+        "bcosca/fatfree-core": "^3.6",
+        "maximebf/debugbar": "^1.13"
+    }
+}
