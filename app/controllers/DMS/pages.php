@@ -2,7 +2,7 @@
 
 namespace DMS;
 
-class Pages {
+class Pages extends Controller {
 
 	public function index($f3) {
 		$res = $f3->DB->exec('SELECT ID, NAME, CLASS FROM OBJECTS WHERE CLASS="item.videoItem" AND REF_ID IS NULL ORDER BY ID DESC LIMIT 10;');
