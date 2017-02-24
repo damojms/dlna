@@ -6,6 +6,8 @@ class Pages extends Controller {
 
 	public function index($f3) {
 		$res = $f3->DB->exec('SELECT ID, NAME, CLASS FROM OBJECTS WHERE CLASS="item.videoItem" AND REF_ID IS NULL ORDER BY ID DESC LIMIT 10;');
+		// $obj = new \DB\SQL\Mapper($f3->DB, 'OBJECTS');
+		// $page = $obj->paginate(0, 10, array('CLASS'=>'item.videoItem', 'REF_ID' => 'NULL'), array('order' => 'ID DESC'));
 		$f3->set('result', $res);
 		$f3->set('content', 'recent.html');
 	
@@ -13,10 +15,10 @@ class Pages extends Controller {
 	}
 
 	public function browse($f3) {
+		$f3->DBBar['messages']->info('Browsing');
 		$id = $f3->get('PARAMS.id');
 		if(empty($id)) 
 			$id = 0;
-
 
 		$cpage = $f3->get('PARAMS.page');
 		if(empty($cpage))
@@ -25,7 +27,8 @@ class Pages extends Controller {
 		$obj = new \DB\SQL\Mapper($f3->DB, 'OBJECTS');
 		$page = $obj->paginate($cpage, 10, array('PARENT_ID=?', $id), array('order' => 'CLASS,NAME'));
 
-		if($page['count'] > 1.0) {
+		if($page['count'] > 1) {
+			$f3->DBBar['messages']->addMessage('Getting some pagination');
 			$f3->set('pagination', $this->pagination($f3, $page));
 		}
 	
@@ -59,8 +62,8 @@ class Pages extends Controller {
 
 	public function detail($f3) {
 		$id = $f3->get('PARAMS.id');
-		$det = \DB\SQL\Mapper($f3->DB, 'OBJECTS');
-		$det->load(array('PARENT_ID', $id));
+		$det = new \DB\SQL\Mapper($f3->DB, 'OBJECTS');
+		$det->load(array('OBJECT_ID', $id));
 
 		$f3->set('detail', $det);
 		$f3->set('content', 'detail.html');
@@ -75,7 +78,7 @@ class Pages extends Controller {
 
 	private function pagination($f3, &$page) {
 		$pg = array();
-	
+		
 		for($i = 0; $i < $page['count']; $i++) {
 			$x = array();
 			$x['active'] = ($page['pos'] == $i);
@@ -83,6 +86,7 @@ class Pages extends Controller {
 			$x['url'] = $i;
 			$pg[] = $x;
 		}
+		
 		return $pg;
 	}	
 }
