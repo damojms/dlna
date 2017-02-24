@@ -1,18 +1,22 @@
 
 <nav aria-label="MORE">
 	<ul class="pagination">
-		<li{{ @result.pos == 0 ? ' class="disabled"' :''}}>
-			<a href="/browse" aria-label="First">
-				<span aria-hidden="true">&laquo;</span>
-			</a>
-		</li>
+		<check if="@resuilt.pos == 0">
+			<true>
+			<li class="disabled"><a href="#" aria-label="First"><span aria-hidden="true">&laquo;</span></a></li>
+			</true>
+			<false>
+			<li><a href="{{@BASE}}/browse" aria-label="First"><span aria-hidden="true">&laquo;</span></a></li>
+			</false>
+		</check>
+		
 
 		<repeat group="{{ @pagination }}" value="{{ @pg }}">
-				<li{{ @pg.value == @PARAMS.page ? ' class="active"' : '' }}><a href="/browse/{{ @PARAMS.id }}/{{ @pg.value }}">{{ @pg.value + 1}}</a></li>
+				<li{{ @pg.value == @PARAMS.page ? ' class="active"' : '' }}><a href="{{@BASE}}/browse/{{ @PARAMS.id }}/{{ @pg.value }}">{{ @pg.value + 1}}</a></li>
 		</repeat>
 
 		<li{{ @result.pos == (@result.count - 1) ? ' class="disabled"' :''}}>
-			<a href="/browse/{{ @PARAMS.id }}/{{ @result.count - 1 }}" aria-label="Next">&raquo;</a>
+			<a href="{{@BASE}}/browse/{{ @PARAMS.id }}/{{ @result.count - 1 }}" aria-label="Next">&raquo;</a>
 		</li>
 	</ul>
 </nav>

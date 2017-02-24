@@ -8,7 +8,7 @@
 		<tbody>
 		<check if="@PARAMS.id != 0 && @PARAMS.id != ''">
 		<true>
-		<tr><td class="upfolder"><a href="/browse/{{ @up }}">Up</a></td></tr>
+		<tr><td class="upfolder"><a href="{{@BASE}}/browse/{{ @up }}">Up</a></td></tr>
 		</true>
 		</check>
 
@@ -16,10 +16,10 @@
 
 		<check if="@item.CLASS == 'container.storageFolder'">
 			<true>
-			<tr><td class="folder"><a href="/browse/{{ @item.OBJECT_ID }}">{{ @item.NAME }}</a></td></tr>
+			<tr><td class="folder"><a href="{{@BASE}}/browse/{{ @item.OBJECT_ID }}">{{ @item.NAME }}</a></td></tr>
 			</true>
 			<false>
-			<tr><td class="video"><img src="/thumb/{{ @item.OBJECT_ID }}" /><a href="/detail/{{ @item.OBJECT_ID }}">{{ @item.NAME }}</a></td></tr>
+			<tr><td class="video"><img src="{{@BASE}}/thumb/{{ @item.OBJECT_ID }}" /><a href="/detail/{{ @item.OBJECT_ID }}">{{ @item.NAME }}</a></td></tr>
 			</false>
 		</check>
 		</repeat>

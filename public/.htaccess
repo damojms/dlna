@@ -1,6 +1,6 @@
 # Enable rewrite engine and route requests to framework
 RewriteEngine On
-
+RewriteBase /dlna/
 RewriteCond %{REQUEST_URI} \.ini$
 RewriteRule \.ini$ - [R=404]
 
@@ -9,3 +9,10 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 
 RewriteRule .* index.php [L,QSA]
+
+<FilesMatch "\.php$">
+AuthUserFile /home/damien/.copspass
+AuthName "DLNA secure access"
+AuthType Basic
+Require valid-user
+</FilesMatch>
