@@ -4,17 +4,20 @@
             <table class="table table-striped">
               <thead>
                 <tr>
-                  <th>#</th>
                   <th>Name</th>
                   <th>Type</th>
                 </tr>
               </thead>
               <tbody>
               <repeat group="{{ @result }}" value="{{ @item }}">
-                <tr><td>{{ @item.ID }}</td><td>{{ @item.NAME }}</td><td>{{ @item.CLASS }}</td></tr>
+                <tr>
+					<td class="video"><img src="{{@BASE}}/thumb/{{ @item.OBJECT_ID }}" /> {{ @item.NAME }}</td>
+					<td>{{ @item.CLASS }}</td>
+				</tr>
               </repeat>
               </tbody>
             </table>
+<!--
             <nav aria-label="MORE">
             <ul class="pagination">
               <li class="disabled"><a href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>
@@ -30,5 +33,6 @@
               </li>
             </ul>
           </nav>
+-->
           </div>
         </div>

@@ -1,10 +1,7 @@
 <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-	<h2 class="sub-header">Browse DLNA</h2>
+	<h2 class="sub-header">Browse Videos</h2>
 	<div class="table-responsive">
 		<table class="table table-striped">
-		<thead>
-			<tr><th>Browse</th></tr>
-		</thead>
 		<tbody>
 		<check if="@PARAMS.id != 0 && @PARAMS.id != ''">
 		<true>
@@ -19,7 +16,7 @@
 			<tr><td class="folder"><a href="{{@BASE}}/browse/{{ @item.OBJECT_ID }}">{{ @item.NAME }}</a></td></tr>
 			</true>
 			<false>
-			<tr><td class="video"><img src="{{@BASE}}/thumb/{{ @item.OBJECT_ID }}" /><a href="/detail/{{ @item.OBJECT_ID }}">{{ @item.NAME }}</a></td></tr>
+			<tr><td class="video"><img src="{{@BASE}}/thumb/{{ @item.OBJECT_ID }}" /><a href="{{@BASE}}/detail/{{ @item.OBJECT_ID }}">{{ @item.NAME }}</a></td></tr>
 			</false>
 		</check>
 		</repeat>

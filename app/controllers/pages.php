@@ -3,7 +3,7 @@
 class Pages extends Controller {
 
 	public function index($f3) {
-		$res = $f3->DB->exec('SELECT ID, NAME, CLASS FROM OBJECTS WHERE CLASS="item.videoItem" AND REF_ID IS NULL ORDER BY ID DESC LIMIT 10;');
+		$res = $f3->DB->exec('SELECT * FROM OBJECTS WHERE CLASS="item.videoItem" AND REF_ID IS NULL ORDER BY ID DESC LIMIT 10;');
 		// $obj = new \DB\SQL\Mapper($f3->DB, 'OBJECTS');
 		// $page = $obj->paginate(0, 10, array('CLASS'=>'item.videoItem', 'REF_ID' => 'NULL'), array('order' => 'ID DESC'));
 		$f3->set('result', $res);
@@ -23,7 +23,7 @@ class Pages extends Controller {
 			$cpage = 0;
 
 		$obj = new \DB\SQL\Mapper($f3->DB, 'OBJECTS');
-		$page = $obj->paginate($cpage, 10, array('PARENT_ID=?', $id), array('order' => 'CLASS,NAME'));
+		$page = $obj->paginate($cpage, 8, array('PARENT_ID=?', $id), array('order' => 'CLASS,NAME'));
 
 		if($page['count'] > 1) {
 			$f3->DBBar['messages']->addMessage('Getting some pagination');
@@ -60,10 +60,10 @@ class Pages extends Controller {
 
 	public function detail($f3) {
 		$id = $f3->get('PARAMS.id');
-		$det = new \DB\SQL\Mapper($f3->DB, 'OBJECTS');
-		$det->load(array('OBJECT_ID', $id));
+		// $det = new \DB\SQL\Mapper($f3->DB, 'OBJECTS');
+		// $det->load(array('OBJECT_ID', $id));
 
-		$f3->set('detail', $det);
+		// $f3->set('detail', $det);
 		$f3->set('content', 'detail.html');
 
 		echo \Template::instance()->render('index.html');
