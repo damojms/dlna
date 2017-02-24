@@ -1,1 +1,4 @@
 tmp/**
+app/configs/config.ini
+public/.htaccess
+composer.lock

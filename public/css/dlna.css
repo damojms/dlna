@@ -1,0 +1,9 @@
+.folder a {
+	background: url(../images/folder.png) no-repeat left;
+	padding-left: 36px;
+
+}
+
+.video img {
+	width:32px;height:32px;
+}
