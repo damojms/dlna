@@ -1,4 +1,6 @@
 tmp/**
 app/configs/config.ini
 public/.htaccess
+public/tmp
+cmd
 composer.lock

@@ -1,9 +1,17 @@
+#status {
+	float: left;
+	padding: 15px 15px;
+}
+
 .folder a {
 	background: url(../images/folder.png) no-repeat left;
-	padding-left: 36px;
-
+	padding-left: 40px;
 }
 
 .video img {
 	width:32px;height:32px;
+}
+
+td a {
+	padding-left: 10px;
 }

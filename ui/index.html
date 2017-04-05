@@ -53,6 +53,8 @@
           <ul class="nav navbar-nav navbar-right">
             <li><a href="{{@BASE}}">Recent</a></li>
             <li><a href="{{@BASE}}/browse">Browse</a></li>
+            <li><a href="#" id="dlna-Rescan">Rescan</a></li>
+            <li><a href="#" id="dlna-Restart">Restart</a></li>
           </ul>
           <form class="navbar-form navbar-right" action="{{@BASE}}/search" method="POST">
             <input type="text" class="form-control" placeholder="Search..." name="search" />
@@ -78,7 +80,7 @@
     <!-- Placed at the end of the document so the pages load faster -->
 	<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-	<script src="{{@BASE}}/js/status.js"></script>
+	<script src="{{@BASE}}/js/functions.js"></script>
     <check if="isset(@DBBarRender)">
       <true>
     {{ @DBBarRender->render() }}
