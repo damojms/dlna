@@ -33,14 +33,14 @@ class Pages extends Controller {
 
 		$cpage = $f3->get('PARAMS.page');
 		if(empty($cpage))
-			$cpage = 0;
+			$cpage = 1;
 
 		//$cpage = \Pagination::findCurrentPage();
 		$filter = array('PARENT_ID=?', $id);
 		$options = array('order' => 'CLASS,NAME');
 
 		$obj = new \DB\SQL\Mapper($f3->DB, 'OBJECTS');
-		$page = $obj->paginate($cpage, 8, $filter, $options);
+		$page = $obj->paginate(($cpage - 1), 8, $filter, $options);
 
 		if($page['count'] > 1) {
 			$f3->DBBar['messages']->addMessage('Getting some pagination');
@@ -61,20 +61,36 @@ class Pages extends Controller {
 
 	public function detail($f3) {
 		$id = $f3->get('PARAMS.id');
-		// $det = new \DB\SQL\Mapper($f3->DB, 'OBJECTS');
-		// $det->load(array('OBJECT_ID', $id));
+		$obj = new \DB\SQL\Mapper($f3->DB, 'OBJECTS');
+		$obj->load(array('OBJECT_ID LIKE ?', $id));
+		$det = new \DB\SQL\Mapper($f3->DB, 'DETAILS');
+		$det->load(['ID', $obj->DETAIL_ID]);
 
-		// $f3->set('detail', $det);
+		$f3->set('object', $obj);
+		$f3->set('detail', $det);
 		$f3->set('content', 'detail.html');
 	}
 
 	public function search($f3) {
-		$search = $f3->get('PARAMS.search');
+		// Initially get search value from POST then save to hive
+		$search = $f3->get('POST.search');
+		if($search != '') {
+			$f3->set('SESSION.lastSearch', $search);
+		}
+
+		// Check if we're paginated
+
+		$cpage = $f3->get('PARAMS.page');
+		if(empty($cpage))
+			$cpage = 1;
 
 		$obj = new \DB\SQL\Mapper($f3->DB, 'OBJECTS');
-		$page = $obj->paginate(0, 8, array('NAME=?', $search));
+		$filter = [ 'NAME LIKE ?', "%{$f3->get('SESSION.lastSearch')}%" ];
+		$option = [ 'group' => 'NAME' ];
+		$page = $obj->paginate(($cpage - 1), 8, $filter, $option);
 
 		$f3->set('result', $page);
+		$f3->set('search', $f3->get('SESSION.lastSearch'));
 		$f3->set('content', 'search.html');
 	}
 

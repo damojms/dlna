@@ -5,6 +5,10 @@ class Functions extends Controller {
 
 	public function thumb($f3) {
 		$id = $f3->get('PARAMS.id');
+		$size = $f3->get('PARAMS.size');
+		if(empty($size))
+			$size = 64;
+
 		$res = $f3->DB->exec('SELECT a.PATH FROM OBJECTS o, DETAILS d, ALBUM_ART a WHERE OBJECT_ID=? AND d.ID=DETAIL_ID AND a.ID=d.ALBUM_ART ', $id);
 		$pth = $res[0]['PATH'];
 
