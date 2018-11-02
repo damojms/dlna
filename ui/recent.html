@@ -11,7 +11,7 @@
               <tbody>
               <repeat group="{{ @result }}" value="{{ @item }}">
                 <tr>
-					<td class="video"><img src="{{@BASE}}/thumb/{{ @item.OBJECT_ID }}" /> {{ @item.NAME }}</td>
+					<td class="video"><a href="{{@BASE}}/detail/{{ @item.OBJECT_ID }}"><img src="{{@BASE}}/thumb/{{ @item.OBJECT_ID }}" /> {{ @item.NAME }}</a></td>
 					<td>{{ @item.CLASS }}</td>
 				</tr>
               </repeat>

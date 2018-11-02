@@ -61,11 +61,26 @@ class Pages extends Controller {
 
 	public function detail($f3) {
 		$id = $f3->get('PARAMS.id');
-		$obj = new \DB\SQL\Mapper($f3->DB, 'OBJECTS');
-		$obj->load(array('OBJECT_ID LIKE ?', $id));
-		$det = new \DB\SQL\Mapper($f3->DB, 'DETAILS');
-		$det->load(['ID', $obj->DETAIL_ID]);
 
+		$obj = new \DB\SQL\Mapper($f3->DB, 'OBJECTS');
+		$obj->load([ 'OBJECT_ID LIKE ?', $id ]);
+
+		$det = new \DB\SQL\Mapper($f3->DB, 'DETAILS');
+		$det->load(['ID=?', $obj->DETAIL_ID]);
+
+		if(($key = $f3->get('OMDBKEY')) != '') {
+			$web = \Web::instance();
+			$title = $obj->NAME;
+			// Strip year from title?
+			$pos = strpos($title, " [");
+			if($pos !== FALSE)
+				//die(var_dump($pos));
+				$title = substr($title, 0, $pos);
+
+			$title = urlencode($title);
+			$omdb = $web->request("http://www.omdbapi.com/?t=$title&apikey=$key");
+			$f3->set('omdb', json_decode($omdb['body'], true));
+		}
 		$f3->set('object', $obj);
 		$f3->set('detail', $det);
 		$f3->set('content', 'detail.html');
@@ -83,8 +98,9 @@ class Pages extends Controller {
 		$cpage = $f3->get('PARAMS.page');
 		if(empty($cpage))
 			$cpage = 1;
-
+		
 		$obj = new \DB\SQL\Mapper($f3->DB, 'OBJECTS');
+
 		$filter = [ 'NAME LIKE ?', "%{$f3->get('SESSION.lastSearch')}%" ];
 		$option = [ 'group' => 'NAME' ];
 		$page = $obj->paginate(($cpage - 1), 8, $filter, $option);

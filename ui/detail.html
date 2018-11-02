@@ -2,13 +2,38 @@
 	<h2 class="sub-header">Video Detail</h2>
 
 	<div class="media">
-	  <img class="d-flex mr-3" src="{{@BASE}}/thumb/{{ @object.OBJECT_ID }}/100" alt="{{ @object.NAME }}<" />
-	  <div class="media-body">
+	<check if="isset(@omdb) AND !isset(@omdb.Error)" >
+	<true>
+		<img src="{{ @omdb.Poster }}}" />
+	</true>
+	<false>
+		<img class="d-flex mr-3" src="{{@BASE}}/thumb/{{ @object.OBJECT_ID }}/160" alt="{{ @object.NAME }}<" />
+	</false>
+	</check>
+
+		<div class="media-body">
+		<check if="isset(@omdb) AND !isset(@omdb.Error)" >
+		<p>
+			<h5>OMDB Information</h5>
+			<table class="table table-striped">
+				<tr><td>Title</td><td>{{ @omdb.Title}}</td></tr>
+				<tr><td>Year</td><td>{{ @omdb.Year}}</td></tr>
+				<tr><td>Plot</td><td>{{ @omdb.Plot}}</td></tr>
+			</table>
+		<!--{ var_dump( @omdb )}}-->
+		</p>
+		</check>
+
 		<h5 class="mt-0">{{ @object.NAME }}</h5>
-		<pre>
-		{{ var_dump(@detail) }}
-		</pre>
-		
-	  </div>
+		<table class="table table-striped">
+		<thead>
+			<tr><th>Name</th><th>Type</th></tr>
+		</thead>
+		<tbody>
+			<tr><td>Run Time:</td><td>{{ @detail.DURATION }}</td></tr>
+			<tr><td>File Size:</td><td>{{ Fmt::hrFileSize( @detail.SIZE ) }}</td></tr>
+		</tbody>
+		</table>		
+		</div>
 	</div>
 </div>

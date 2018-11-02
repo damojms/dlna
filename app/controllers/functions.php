@@ -14,7 +14,7 @@ class Functions extends Controller {
 
 		if(file_exists($pth)) {
 			$img = new \Image($pth, false, '');
-			$img->resize(64, 64, FALSE, FALSE);
+			$img->resize($size, $size, FALSE, FALSE);
 			$img->render();
 		} else {
 			header('Content-type: image/png');
@@ -39,4 +39,5 @@ class Functions extends Controller {
 		exec('/mnt/www/dlna/cmd restart', $output, $return_var);
 		echo $output[0];
 	}
+
 }
