@@ -2,5 +2,6 @@ tmp/**
 app/configs/config.ini
 public/.htaccess
 public/tmp
+vendor/**
 cmd
 composer.lock

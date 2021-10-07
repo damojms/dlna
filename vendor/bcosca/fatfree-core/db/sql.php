@@ -2,7 +2,7 @@
 
 /*
 
-	Copyright (c) 2009-2016 F3::Factory/Bong Cosca, All rights reserved.
+	Copyright (c) 2009-2019 F3::Factory/Bong Cosca, All rights reserved.
 
 	This file is part of the Fat-Free Framework (http://fatfreeframework.com).
 
@@ -66,7 +66,9 @@ class SQL {
 	*	@return bool
 	**/
 	function rollback() {
-		$out=$this->pdo->rollback();
+		$out=FALSE;
+		if ($this->pdo->inTransaction())
+			$out=$this->pdo->rollback();
 		$this->trans=FALSE;
 		return $out;
 	}
@@ -76,7 +78,9 @@ class SQL {
 	*	@return bool
 	**/
 	function commit() {
-		$out=$this->pdo->commit();
+		$out=FALSE;
+		if ($this->pdo->inTransaction())
+			$out=$this->pdo->commit();
 		$this->trans=FALSE;
 		return $out;
 	}
@@ -113,18 +117,18 @@ class SQL {
 
 	/**
 	*	Cast value to PHP type
-	*	@return scalar
+	*	@return mixed
 	*	@param $type string
-	*	@param $val scalar
+	*	@param $val mixed
 	**/
 	function value($type,$val) {
 		switch ($type) {
 			case self::PARAM_FLOAT:
-				return (float)(is_string($val)
-					? str_replace(',','.',preg_replace('/([.,])(?!\d+$)/','',$val))
-					: $val);
+				if (!is_string($val))
+					$val=str_replace(',','.',$val);
+				return $val;
 			case \PDO::PARAM_NULL:
-				return (unset)$val;
+				return NULL;
 			case \PDO::PARAM_INT:
 				return (int)$val;
 			case \PDO::PARAM_BOOL:
@@ -173,7 +177,7 @@ class SQL {
 		$fw=\Base::instance();
 		$cache=\Cache::instance();
 		$result=FALSE;
-		for ($i=0;$i<$count;$i++) {
+		for ($i=0;$i<$count;++$i) {
 			$cmd=$cmds[$i];
 			$arg=$args[$i];
 			// ensure 1-based arguments
@@ -185,7 +189,7 @@ class SQL {
 				continue;
 			$now=microtime(TRUE);
 			$keys=$vals=[];
-			if ($fw->get('CACHE') && $ttl && ($cached=$cache->exists(
+			if ($fw->CACHE && $ttl && ($cached=$cache->exists(
 				$hash=$fw->hash($this->dsn.$cmd.
 				$fw->stringify($arg)).($tag?'.'.$tag:'').'.sql',$result)) &&
 				$cached[0]+$ttl>microtime(TRUE)) {
@@ -220,20 +224,22 @@ class SQL {
 						'/';
 				}
 				if ($log)
-					$this->log.=($stamp?(date('r').' '):'').'('.
-						sprintf('%.1f',1e3*(microtime(TRUE)-$now)).'ms) '.
+					$this->log.=($stamp?(date('r').' '):'').'(-0ms) '.
 						preg_replace($keys,$vals,
 							str_replace('?',chr(0).'?',$cmd),1).PHP_EOL;
 				$query->execute();
-				$error=$query->errorinfo();
-				if ($error[0]!=\PDO::ERR_NONE) {
+				if ($log)
+					$this->log=str_replace('(-0ms)',
+						'('.sprintf('%.1f',1e3*(microtime(TRUE)-$now)).'ms)',
+						$this->log);
+				if (($error=$query->errorinfo()) && $error[0]!=\PDO::ERR_NONE) {
 					// Statement-level error occurred
 					if ($this->trans)
 						$this->rollback();
 					user_error('PDOStatement: '.$error[2],E_USER_ERROR);
 				}
 				if (preg_match('/(?:^[\s\(]*'.
-					'(?:EXPLAIN|SELECT|PRAGMA|SHOW)|RETURNING)\b/is',$cmd) ||
+					'(?:WITH|EXPLAIN|SELECT|PRAGMA|SHOW)|RETURNING)\b/is',$cmd) ||
 					(preg_match('/^\s*(?:CALL|EXEC)\b/is',$cmd) &&
 						$query->columnCount())) {
 					$result=$query->fetchall(\PDO::FETCH_ASSOC);
@@ -246,7 +252,7 @@ class SQL {
 								$result[$pos][trim($key,'\'"[]`')]=$val;
 						}
 					$this->rows=count($result);
-					if ($fw->get('CACHE') && $ttl)
+					if ($fw->CACHE && $ttl)
 						// Save to cache backend
 						$cache->set($hash,$result,$ttl);
 				}
@@ -255,15 +261,13 @@ class SQL {
 				$query->closecursor();
 				unset($query);
 			}
-			else {
-				$error=$this->errorinfo();
-				if ($error[0]!=\PDO::ERR_NONE) {
-					// PDO-level error occurred
-					if ($this->trans)
-						$this->rollback();
-					user_error('PDO: '.$error[2],E_USER_ERROR);
-				}
+			elseif (($error=$this->pdo->errorInfo()) && $error[0]!=\PDO::ERR_NONE) {
+				// PDO-level error occurred
+				if ($this->trans)
+					$this->rollback();
+				user_error('PDO: '.$error[2],E_USER_ERROR);
 			}
+
 		}
 		if ($this->trans && $auto)
 			$this->commit();
@@ -280,13 +284,27 @@ class SQL {
 
 	/**
 	*	Return SQL profiler results (or disable logging)
-	*	@param $flag bool
 	*	@return string
+	*	@param $flag bool
 	**/
 	function log($flag=TRUE) {
 		if ($flag)
 			return $this->log;
 		$this->log=FALSE;
+	}
+
+	/**
+	*	Return TRUE if table exists
+	*	@return bool
+	*	@param $table string
+	**/
+	function exists($table) {
+		$mode=$this->pdo->getAttribute(\PDO::ATTR_ERRMODE);
+		$this->pdo->setAttribute(\PDO::ATTR_ERRMODE,\PDO::ERRMODE_SILENT);
+		$out=$this->pdo->
+			query('SELECT 1 FROM '.$this->quotekey($table).' LIMIT 1');
+		$this->pdo->setAttribute(\PDO::ATTR_ERRMODE,$mode);
+		return is_object($out);
 	}
 
 	/**
@@ -297,45 +315,70 @@ class SQL {
 	*	@param $ttl int|array
 	**/
 	function schema($table,$fields=NULL,$ttl=0) {
+		$fw=\Base::instance();
+		$cache=\Cache::instance();
+		if ($fw->CACHE && $ttl &&
+			($cached=$cache->exists(
+				$hash=$fw->hash($this->dsn.$table).'.schema',$result)) &&
+			$cached[0]+$ttl>microtime(TRUE))
+			return $result;
 		if (strpos($table,'.'))
 			list($schema,$table)=explode('.',$table);
 		// Supported engines
+		// format: engine_name => array of:
+		//	0: query
+		//	1: field name of column name
+		//	2: field name of column type
+		//	3: field name of default value
+		//	4: field name of nullable value
+		//	5: expected field value to be nullable
+		//	6: field name of primary key flag
+		//	7: expected field value to be a primary key
+		//	8: field name of auto increment check (optional)
+		//	9: expected field value to be an auto-incremented identifier
 		$cmd=[
 			'sqlite2?'=>[
-				'PRAGMA table_info("'.$table.'")',
-				'name','type','dflt_value','notnull',0,'pk',TRUE],
+				'SELECT * FROM pragma_table_info('.$this->quote($table).') JOIN ('.
+					'SELECT sql FROM sqlite_master WHERE type=\'table\' AND '.
+					'name='.$this->quote($table).')',
+				'name','type','dflt_value','notnull',0,'pk',TRUE,'sql',
+					'/\W(%s)\W+[^,]+?AUTOINCREMENT\W/i'],
 			'mysql'=>[
 				'SHOW columns FROM `'.$this->dbname.'`.`'.$table.'`',
-				'Field','Type','Default','Null','YES','Key','PRI'],
+				'Field','Type','Default','Null','YES','Key','PRI','Extra','auto_increment'],
 			'mssql|sqlsrv|sybase|dblib|pgsql|odbc'=>[
 				'SELECT '.
-					'c.column_name AS field,'.
-					'c.data_type AS type,'.
-					'c.column_default AS defval,'.
-					'c.is_nullable AS nullable,'.
-					't.constraint_type AS pkey '.
-				'FROM information_schema.columns AS c '.
+					'C.COLUMN_NAME AS field,'.
+					'C.DATA_TYPE AS type,'.
+					'C.COLUMN_DEFAULT AS defval,'.
+					'C.IS_NULLABLE AS nullable,'.
+				($this->engine=='pgsql'
+					?'COALESCE(POSITION(\'nextval\' IN C.COLUMN_DEFAULT),0) AS autoinc,'
+					:'columnproperty(object_id(C.TABLE_NAME),C.COLUMN_NAME,\'IsIdentity\')'
+						.' AS autoinc,').
+					'T.CONSTRAINT_TYPE AS pkey '.
+				'FROM INFORMATION_SCHEMA.COLUMNS AS C '.
 				'LEFT OUTER JOIN '.
-					'information_schema.key_column_usage AS k '.
+					'INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS K '.
 					'ON '.
-						'c.table_name=k.table_name AND '.
-						'c.column_name=k.column_name AND '.
-						'c.table_schema=k.table_schema '.
+						'C.TABLE_NAME=K.TABLE_NAME AND '.
+						'C.COLUMN_NAME=K.COLUMN_NAME AND '.
+						'C.TABLE_SCHEMA=K.TABLE_SCHEMA '.
 						($this->dbname?
-							('AND c.table_catalog=k.table_catalog '):'').
+							('AND C.TABLE_CATALOG=K.TABLE_CATALOG '):'').
 				'LEFT OUTER JOIN '.
-					'information_schema.table_constraints AS t ON '.
-						'k.table_name=t.table_name AND '.
-						'k.constraint_name=t.constraint_name AND '.
-						'k.table_schema=t.table_schema '.
+					'INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS T ON '.
+						'K.TABLE_NAME=T.TABLE_NAME AND '.
+						'K.CONSTRAINT_NAME=T.CONSTRAINT_NAME AND '.
+						'K.TABLE_SCHEMA=T.TABLE_SCHEMA '.
 						($this->dbname?
-							('AND k.table_catalog=t.table_catalog '):'').
+							('AND K.TABLE_CATALOG=T.TABLE_CATALOG '):'').
 				'WHERE '.
-					'c.table_name='.$this->quote($table).
+					'C.TABLE_NAME='.$this->quote($table).
 					($this->dbname?
-						(' AND c.table_catalog='.
+						(' AND C.TABLE_CATALOG='.
 							$this->quote($this->dbname)):''),
-				'field','type','defval','nullable','YES','pkey','PRIMARY KEY'],
+				'field','type','defval','nullable','YES','pkey','PRIMARY KEY','autoinc',1],
 			'oci'=>[
 				'SELECT c.column_name AS field, '.
 					'c.data_type AS type, '.
@@ -354,32 +397,41 @@ class SQL {
 		];
 		if (is_string($fields))
 			$fields=\Base::instance()->split($fields);
+		$conv=[
+			'int\b|integer'=>\PDO::PARAM_INT,
+			'bool'=>\PDO::PARAM_BOOL,
+			'blob|bytea|image|binary'=>\PDO::PARAM_LOB,
+			'float|real|double|decimal|numeric'=>self::PARAM_FLOAT,
+			'.+'=>\PDO::PARAM_STR
+		];
 		foreach ($cmd as $key=>$val)
 			if (preg_match('/'.$key.'/',$this->engine)) {
 				$rows=[];
-				foreach ($this->exec($val[0],NULL,$ttl) as $row) {
-					if (!$fields || in_array($row[$val[1]],$fields))
-						$rows[$row[$val[1]]]=[
-							'type'=>$row[$val[2]],
-							'pdo_type'=>
-								preg_match('/int\b|integer/i',$row[$val[2]])?
-									\PDO::PARAM_INT:
-									(preg_match('/bool/i',$row[$val[2]])?
-										\PDO::PARAM_BOOL:
-										(preg_match(
-											'/blob|bytea|image|binary/i',
-											$row[$val[2]])?\PDO::PARAM_LOB:
-											(preg_match(
-												'/float|decimal|real|numeric|double/i',
-												$row[$val[2]])?self::PARAM_FLOAT:
-												\PDO::PARAM_STR))),
-							'default'=>is_string($row[$val[3]])?
-								preg_replace('/^\s*([\'"])(.*)\1\s*/','\2',
-								$row[$val[3]]):$row[$val[3]],
-							'nullable'=>$row[$val[4]]==$val[5],
-							'pkey'=>$row[$val[6]]==$val[7]
-						];
-				}
+				foreach ($this->exec($val[0],NULL) as $row)
+					if (!$fields || in_array($row[$val[1]],$fields)) {
+						foreach ($conv as $regex=>$type)
+							if (preg_match('/'.$regex.'/i',$row[$val[2]]))
+								break;
+						if (!isset($rows[$row[$val[1]]])) // handle duplicate rows in PgSQL
+							$rows[$row[$val[1]]]=[
+								'type'=>$row[$val[2]],
+								'pdo_type'=>$type,
+								'default'=>is_string($row[$val[3]])?
+									preg_replace('/^\s*([\'"])(.*)\1\s*/','\2',
+									$row[$val[3]]):$row[$val[3]],
+								'nullable'=>$row[$val[4]]==$val[5],
+								'pkey'=>$row[$val[6]]==$val[7],
+								'auto_inc'=>isset($val[8]) && isset($row[$val[8]])
+									? ($this->engine=='sqlite'?
+										(bool) preg_match(sprintf($val[9],$row[$val[1]]),
+											$row[$val[8]]):
+										($row[$val[8]]==$val[9])
+									) : NULL,
+							];
+					}
+				if ($fw->CACHE && $ttl)
+					// Save to cache backend
+					$cache->set($hash,$rows,$ttl);
 				return $rows;
 			}
 		user_error(sprintf(self::E_PKey,$table),E_USER_ERROR);
@@ -448,8 +500,8 @@ class SQL {
 	 **/
 	function quotekey($key, $split=TRUE) {
 		$delims=[
-			'mysql'=>'``',
-			'sqlite2?|pgsql|oci'=>'""',
+			'sqlite2?|mysql'=>'``',
+			'pgsql|oci'=>'""',
 			'mssql|sqlsrv|odbc|sybase|dblib'=>'[]'
 		];
 		$use='';
@@ -487,12 +539,12 @@ class SQL {
 		$fw=\Base::instance();
 		$this->uuid=$fw->hash($this->dsn=$dsn);
 		if (preg_match('/^.+?(?:dbname|database)=(.+?)(?=;|$)/is',$dsn,$parts))
-			$this->dbname=$parts[1];
+			$this->dbname=str_replace('\\ ',' ',$parts[1]);
 		if (!$options)
 			$options=[];
 		if (isset($parts[0]) && strstr($parts[0],':',TRUE)=='mysql')
 			$options+=[\PDO::MYSQL_ATTR_INIT_COMMAND=>'SET NAMES '.
-				strtolower(str_replace('-','',$fw->get('ENCODING'))).';'];
+				strtolower(str_replace('-','',$fw->ENCODING)).';'];
 		$this->pdo=new \PDO($dsn,$user,$pw,$options);
 		$this->engine=$this->pdo->getattribute(\PDO::ATTR_DRIVER_NAME);
 	}

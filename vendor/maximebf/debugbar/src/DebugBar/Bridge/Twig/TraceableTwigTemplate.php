@@ -15,8 +15,10 @@ use Twig_TemplateInterface;
 
 /**
  * Wraps a Twig_Template to add profiling features
+ * 
+ * @deprecated
  */
-class TraceableTwigTemplate implements Twig_TemplateInterface
+class TraceableTwigTemplate extends Twig_Template implements Twig_TemplateInterface
 {
     protected $template;
 
@@ -33,6 +35,11 @@ class TraceableTwigTemplate implements Twig_TemplateInterface
     public function __call($name, $arguments)
     {
         return call_user_func_array(array($this->template, $name), $arguments);
+    }
+
+    public function doDisplay(array $context, array $blocks = array())
+    {
+        return $this->template->doDisplay($context, $blocks);
     }
 
     public function getTemplateName()
