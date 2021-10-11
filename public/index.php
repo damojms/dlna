@@ -1,4 +1,5 @@
 <?php
+
 require_once '../vendor/autoload.php';
 
 // TODO: This needs moving out of the main index.php
@@ -38,6 +39,7 @@ $f3 = \Base::instance();
 $f3->config('../app/configs/config.ini');
 $f3->config('../app/configs/routes.ini');
 
-$f3->set('DB', new DBGDB('sqlite:'.$f3->{DBPATH}));
+$f3->set('DB', new \DBGDB('sqlite:'.$f3->get('DBPATH'), null, null, [PDO::SQLITE_ATTR_OPEN_FLAGS => PDO::SQLITE_OPEN_READONLY]));
 
 $f3->run();
+

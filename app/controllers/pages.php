@@ -4,13 +4,15 @@ class Pages extends Controller {
 
 	public function beforeroute() {
 		$f3 = \Base::instance();
-		if($f3->{DEBUG} > 0) {
+		
+		if($f3->get('DEBUG') > 0) {
 			$debugbar = new \DebugBar\StandardDebugBar();
 			$debugbarRenderer = $debugbar->getJavascriptRenderer($f3->{BASE}.'/resources');
 			$debugbar->addCollector(new \DebugBar\DataCollector\PDO\PDOCollector($f3->{DB}->pdo()));
 			$f3->set('DBBar', $debugbar);
 			$f3->set('DBBarRender', $debugbarRenderer);
 		}
+
 	}
 
 	public function afterroute() {
@@ -18,7 +20,9 @@ class Pages extends Controller {
 	}
 
 	public function index($f3) {
-		$res = $f3->DB->exec('SELECT * FROM OBJECTS WHERE CLASS="item.videoItem" AND REF_ID IS NULL ORDER BY ID DESC LIMIT 10;');
+		echo "index";
+		$db = $f3->get('DB');
+		$res = $db->exec('SELECT * FROM OBJECTS WHERE CLASS="item.videoItem" AND REF_ID IS NULL ORDER BY ID DESC LIMIT 10;');
 		// $obj = new \DB\SQL\Mapper($f3->DB, 'OBJECTS');
 		// $page = $obj->paginate(0, 10, array('CLASS'=>'item.videoItem', 'REF_ID' => 'NULL'), array('order' => 'ID DESC'));
 		$f3->set('result', $res);
@@ -26,7 +30,10 @@ class Pages extends Controller {
 	}
 
 	public function browse($f3) {
-		$f3->DBBar['messages']->info('Browsing');
+		if($f3->DEBUG > 0) {
+			$dbBar = $f3->get('DBBar');
+			$dbBar['messages']->info('Browsing');
+		}
 		$id = $f3->get('PARAMS.id');
 		if(empty($id)) 
 			$id = 0;
@@ -43,7 +50,8 @@ class Pages extends Controller {
 		$page = $obj->paginate(($cpage - 1), 8, $filter, $options);
 
 		if($page['count'] > 1) {
-			$f3->DBBar['messages']->addMessage('Getting some pagination');
+			if($f3->DEBUG > 0)
+				$dbBar['messages']->addMessage('Getting some pagination');
 			$f3->set('pagination', $this->pagination($f3, $page));
 		}
 	

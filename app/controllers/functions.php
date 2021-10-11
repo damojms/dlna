@@ -1,6 +1,5 @@
 <?php
 namespace Controllers;
-
 class Functions extends Controller {
 
 	public function thumb($f3) {

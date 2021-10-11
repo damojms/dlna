@@ -5,3 +5,4 @@ public/tmp
 vendor/**
 cmd
 composer.lock
+composer.lock
