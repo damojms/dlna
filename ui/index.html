@@ -51,7 +51,7 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav navbar-right">
-            <li><a href="{{@BASE}}">Recent</a></li>
+            <li><a href="/">Recent</a></li>
             <li><a href="{{@BASE}}/browse">Browse</a></li>
             <li><a href="#" id="dlna-Rescan">Rescan</a></li>
             <li><a href="#" id="dlna-Restart">Restart</a></li>
@@ -67,7 +67,7 @@
       <div class="row">
         <div class="col-sm-3 col-md-2 sidebar">
           <ul class="nav nav-sidebar">
-            <li{{ @PATTERN == '/' ? ' class="active"' : ''}}><a href="{{@BASE}}">Recently Added</a></li>
+            <li{{ @PATTERN == '/' ? ' class="active"' : ''}}><a href="/">Recently Added</a></li>
             <li{{ substr(@PATTERN,0,7) == '/browse' ? ' class="active"' : ''}}><a href="{{@BASE}}/browse">Browse</a></li>
           </ul>
         </div>

@@ -7,8 +7,8 @@ class Pages extends Controller {
 		
 		if($f3->get('DEBUG') > 0) {
 			$debugbar = new \DebugBar\StandardDebugBar();
-			$debugbarRenderer = $debugbar->getJavascriptRenderer($f3->{BASE}.'/resources');
-			$debugbar->addCollector(new \DebugBar\DataCollector\PDO\PDOCollector($f3->{DB}->pdo()));
+			$debugbarRenderer = $debugbar->getJavascriptRenderer($f3->BASE.'/resources');
+			$debugbar->addCollector(new \DebugBar\DataCollector\PDO\PDOCollector($f3->DB->pdo()));
 			$f3->set('DBBar', $debugbar);
 			$f3->set('DBBarRender', $debugbarRenderer);
 		}
@@ -19,21 +19,34 @@ class Pages extends Controller {
 		echo \Template::instance()->render('index.html');
 	}
 
-	public function index($f3) {
-		echo "index";
-		$db = $f3->get('DB');
-		$res = $db->exec('SELECT * FROM OBJECTS WHERE CLASS="item.videoItem" AND REF_ID IS NULL ORDER BY ID DESC LIMIT 10;');
-		// $obj = new \DB\SQL\Mapper($f3->DB, 'OBJECTS');
-		// $page = $obj->paginate(0, 10, array('CLASS'=>'item.videoItem', 'REF_ID' => 'NULL'), array('order' => 'ID DESC'));
-		$f3->set('result', $res);
+	public function recent($f3) {
+		$cpage = $f3->get('PARAMS.page');
+		if(empty($cpage))
+			$cpage = 1;
+
+		$obj = new \DB\SQL\Mapper($f3->DB, 'OBJECTS');
+		$page = $obj->paginate(($cpage - 1), 8, [ 'CLASS=? AND REF_ID IS NULL', 'item.videoItem' ], ['order' => 'ID DESC']);
+		$f3->set('result', $page);
+
+		if($page['count'] > 1) {
+			// build page links
+			$pages = new \Pagination($page['total'], $page['limit']);
+			// add some configuration if needed
+			$pages->setTemplate('partials/pagebrowser.html');
+			$pages->setLinkPath('recent/');
+			// for template usage, serve generated pagebrowser to the hive
+			$f3->set('pagebrowser', $pages->serve());
+		}
 		$f3->set('content', 'recent.html');
 	}
 
 	public function browse($f3) {
 		if($f3->DEBUG > 0) {
-			$dbBar = $f3->get('DBBar');
-			$dbBar['messages']->info('Browsing');
+			$dbBar = $f3->get('dbBar');
+			if(isset($dbBar['messages']))
+				$dbBar['messages']->info('Browsing');
 		}
+
 		$id = $f3->get('PARAMS.id');
 		if(empty($id)) 
 			$id = 0;
@@ -43,16 +56,23 @@ class Pages extends Controller {
 			$cpage = 1;
 
 		//$cpage = \Pagination::findCurrentPage();
-		$filter = array('PARENT_ID=?', $id);
-		$options = array('order' => 'CLASS,NAME');
+		$filter = ['PARENT_ID=?', $id ];
+		$options = [ 'order' => 'CLASS,NAME' ];
 
 		$obj = new \DB\SQL\Mapper($f3->DB, 'OBJECTS');
 		$page = $obj->paginate(($cpage - 1), 8, $filter, $options);
 
 		if($page['count'] > 1) {
-			if($f3->DEBUG > 0)
-				$dbBar['messages']->addMessage('Getting some pagination');
-			$f3->set('pagination', $this->pagination($f3, $page));
+			// build page links
+			$pages = new \Pagination($page['total'], $page['limit']);
+			// add some configuration if needed
+			$pages->setTemplate('partials/pagebrowser.html');
+			$link = 'browse/';
+			if(!empty($f3->get('PARAMS.id')))
+				$link .= $id;
+			$pages->setLinkPath($link);
+			// for template usage, serve generated pagebrowser to the hive
+			$f3->set('pagebrowser', $pages->serve());
 		}
 	
 		$f3->set('result', $page);
@@ -113,6 +133,18 @@ class Pages extends Controller {
 		$option = [ 'group' => 'NAME' ];
 		$page = $obj->paginate(($cpage - 1), 8, $filter, $option);
 
+		
+		if($page['count'] > 1) {
+			// build page links
+			$pages = new \Pagination($page['total'], $page['limit']);
+			// add some configuration if needed
+			$pages->setTemplate('partials/pagebrowser.html');
+			$link = 'search/';
+			$pages->setLinkPath($link);
+			// for template usage, serve generated pagebrowser to the hive
+			$f3->set('pagebrowser', $pages->serve());
+		}
+
 		$f3->set('result', $page);
 		$f3->set('search', $f3->get('SESSION.lastSearch'));
 		$f3->set('content', 'search.html');
@@ -123,10 +155,10 @@ class Pages extends Controller {
 	}
 
 	private function pagination($f3, &$page) {
-		$pg = array();
+		$pg = [];
 		
 		for($i = 0; $i < $page['count']; $i++) {
-			$x = array();
+			$x = [];
 			$x['active'] = ($page['pos'] == $i);
 			$x['value'] = $i;
 			$x['url'] = $i;

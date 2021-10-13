@@ -29,7 +29,7 @@
 
 <check if="@result.count > 1">
 	<true>
-		<F3:pagebrowser items="{{ @result.total }}" limit="{{ @result.limit }}"/>
+		{{ @pagebrowser | raw }}
 	</true>
 </check>
 

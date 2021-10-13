@@ -1,6 +1,7 @@
 <?php
 namespace Controllers;
 class Functions extends Controller {
+	public $cmd = '/var/www/dlna/cmd';
 
 	public function thumb($f3) {
 		$id = $f3->get('PARAMS.id');
@@ -22,21 +23,21 @@ class Functions extends Controller {
 	}
 
 	public function status($f3) {
-		$output; $return_var;
-		exec('/mnt/www/dlna/cmd status', $output, $return_var);
-		echo $output[0];
+		// $output; $return_var;
+		// exec($cmd.' status', $output, $return_var);
+		// echo $output[0];
 	}
 
 	public function rescan($f3){
-		$output; $return_var;
-		exec('/mnt/www/dlna/cmd rescan', $output, $return_var);
-		echo $output[0];
+		// $output; $return_var;
+		// exec($cmd.' rescan', $output, $return_var);
+		// echo $output[0];
 	}
 
 	public function restart($f3){
-		$output; $return_var;
-		exec('/mnt/www/dlna/cmd restart', $output, $return_var);
-		echo $output[0];
+		// $output; $return_var;
+		// exec($cmd.' restart', $output, $return_var);
+		// echo $output[0];
 	}
 
 }

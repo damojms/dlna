@@ -1,9 +1,8 @@
 [GLOBALS]
 ONERROR=Pages->error
 DEBUG=4
-AUTOLOAD=../app/controllers/
+AUTOLOAD=../app/
 DBPATH=/var/cache/minidlna/files.db
 UI=../ui/
 LOGS=../logs/
 TEMP=../tmp/
-test=Yeah!!
