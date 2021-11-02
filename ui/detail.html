@@ -13,6 +13,7 @@
 
 		<div class="media-body">
 		<check if="isset(@omdb) AND !isset(@omdb.Error)" >
+			<true>
 		<p>
 			<h5>OMDB Information</h5>
 			<table class="table table-striped">
@@ -20,8 +21,12 @@
 				<tr><td>Year</td><td>{{ @omdb.Year}}</td></tr>
 				<tr><td>Plot</td><td>{{ @omdb.Plot}}</td></tr>
 			</table>
-		<!--{ var_dump( @omdb )}}-->
+		
 		</p>
+			</true>
+			<false>
+				{{ var_dump( @omdb ) }}
+			</false>
 		</check>
 
 		<h5 class="mt-0">{{ @object.NAME }}</h5>

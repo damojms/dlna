@@ -5,19 +5,19 @@
         <thead>
           <tr>
             <th>Name</th>
-            <th>Type</th>
+            <th>ID</th>
           </tr>
         </thead>
         <tbody>
-        <repeat group="{{ @result.subset }}" value="{{ @item }}">
+        <repeat group="{{ @result }}" value="{{ @item }}">
         <tr>
           <td class="video"><a href="{{@BASE}}/detail/{{ @item.OBJECT_ID }}"><img src="{{@BASE}}/thumb/{{ @item.OBJECT_ID }}" /> {{ @item.NAME }}</a></td>
-          <td>{{ @item.CLASS }}</td>
+          <td>{{ @item.OBJECT_ID }}</td>
           </tr>
         </repeat>
         </tbody>
       </table>
-      <check if="@result.count > 1">
+      <check if="@page.count > 1">
         <true>
           {{ @pagebrowser | raw }}
         </true>
