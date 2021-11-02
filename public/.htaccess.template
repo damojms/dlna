@@ -11,7 +11,7 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule .* index.php [L,QSA]
 
 <FilesMatch "\.php$">
-AuthUserFile /home/damien/.copspass
+AuthUserFile [PATH]/.copspass
 AuthName "DLNA secure access"
 AuthType Basic
 Require valid-user
